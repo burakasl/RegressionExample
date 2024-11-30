@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import joblib
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.neighbors import KNeighborsRegressor
@@ -125,3 +125,41 @@ for model_name, config in param_grids.items():
         print(f"{model_name} model has been saved as {model_filename}")
 
     print("----------------------")
+
+#Best saved model (Ridge Regression) is run for 5 folds
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
+model = Ridge(alpha=1.0, solver="saga")
+
+mse_scores_rr = []
+r2_scores_rr = []
+
+#Dataframe is converted into arrays for KFold operations
+X = X.values
+y = y.values
+
+for fold, (train_index, test_index) in enumerate(kf.split(X)):
+    
+    X_fold_train, X_fold_test = X[train_index], X[test_index]
+    y_fold_train, y_fold_test = y[train_index], y[test_index]
+
+    model.fit(X_fold_train, y_fold_train)
+
+    y_fold_pred = model.predict(X_fold_test)
+
+    mse = mean_squared_error(y_fold_test, y_fold_pred)
+    r2 = r2_score(y_fold_test, y_fold_pred)
+
+    mse_scores_rr.append(mse)
+    r2_scores_rr.append(r2)
+
+    print(f"Fold: {fold + 1}")
+    print(f"MSE: {mse:.4f}")
+    print(f"R²: {r2:.4f}")
+    print("----------------------")
+
+mean_mse_rr = np.mean(mse_scores_rr)
+mean_r2_rr = np.mean(r2_scores_rr)
+
+print(f"Mean MSE for Ridge Regression: {mean_mse_rr:.4f}")
+print(f"Mean R² for Ridge Regression: {mean_r2_rr:.4f}")
