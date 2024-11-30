@@ -1,4 +1,4 @@
-# LinearRegressionExample
+# RegressionExample
 
 ## Project Description
 
